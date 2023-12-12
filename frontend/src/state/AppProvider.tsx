@@ -1,7 +1,7 @@
 import React, { createContext, useReducer, ReactNode, useEffect } from 'react';
 import { appStateReducer } from './AppReducer';
 import { ChatHistoryLoadingState, CosmosDBHealth, historyList, historyEnsure, CosmosDBStatus } from '../api';
-import { Conversation } from '../api';
+import { Conversation, Feedback } from '../api';
   
 export interface AppState {
     isChatHistoryOpen: boolean;
@@ -10,6 +10,7 @@ export interface AppState {
     chatHistory: Conversation[] | null;
     filteredChatHistory: Conversation[] | null;
     currentChat: Conversation | null;
+    feedbackState: { [answerId: string]: Feedback.Neutral | Feedback.Positive | Feedback.Negative; };
 }
 
 export type Action =
@@ -24,6 +25,8 @@ export type Action =
     | { type: 'DELETE_CHAT_HISTORY'}  // API Call
     | { type: 'DELETE_CURRENT_CHAT_MESSAGES', payload: string }  // API Call
     | { type: 'FETCH_CHAT_HISTORY', payload: Conversation[] | null }  // API Call
+    | { type: 'SET_FEEDBACK_STATE'; payload: { answerId: string; feedback: Feedback.Positive | Feedback.Negative | Feedback.Neutral } }
+    | { type: 'GET_FEEDBACK_STATE'; payload: string };
 
 const initialState: AppState = {
     isChatHistoryOpen: false,
@@ -34,7 +37,8 @@ const initialState: AppState = {
     isCosmosDBAvailable: {
         cosmosDB: false,
         status: CosmosDBStatus.NotConfigured,
-    }
+    },
+    feedbackState: {}
 };
 
 export const AppStateContext = createContext<{
